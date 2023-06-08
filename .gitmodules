@@ -1,0 +1,5 @@
+[submodule "libjpeg-turbo"]
+	path = libjpeg-turbo
+	url = git@github.com:libjpeg-turbo/libjpeg-turbo.git
+	branch = master
+   	ignore = dirty
