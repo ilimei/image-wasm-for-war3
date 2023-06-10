@@ -3,11 +3,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct RustLogMessage {
-  int id;
-  const char *msg;
-} RustLogMessage;
-
 typedef struct {
     int32_t width;
     int32_t height;
@@ -25,9 +20,7 @@ typedef struct {
 typedef enum {
     TGA,
     PNG,
-    GIF,
-} ImageFormat;
+} LibImageFormat;
 
-
-void rust_log(struct RustLogMessage msg);
-ImageBoxData process_image(ImageData image_data, ImageFormat format);
+ImageBoxData rust_encode_image(ImageData image_data, LibImageFormat format);
+ImageBoxData rust_decode_image(ImageData image_data, LibImageFormat format);

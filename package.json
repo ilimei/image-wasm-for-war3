@@ -1,0 +1,27 @@
+{
+  "name": "image-wasm-for-war3",
+  "version": "1.0.0",
+  "description": "image process by wasm",
+  "main": "index.js",
+  "scripts": {
+    "build": "zx scripts/build.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilimei/image-wasm-for-war3.git"
+  },
+  "keywords": [
+    "wasm",
+    "image"
+  ],
+  "author": "ilimei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ilimei/image-wasm-for-war3/issues"
+  },
+  "homepage": "https://github.com/ilimei/image-wasm-for-war3#readme",
+  "devDependencies": {
+    "zx": "^7.2.2"
+  }
+}

@@ -1,1 +1,5 @@
-build/
+node_modules/
+dist/
+test/*.png
+test/*.jpg
+test/*.tga
