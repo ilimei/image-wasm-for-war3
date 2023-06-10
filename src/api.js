@@ -40,7 +40,7 @@ var DEFAULT_QUALITY = 90;
  *                  Quality, [0 - 100].
  * @param {function} cb Callback to invoke on compvarion.
  *
- * @callback { width: number, height: number, data: Uint8Array }
+ * @callback { data: ArrayBuffer }
  */
 function encodeJpeg(buf, options, cb) {
     if (typeof options === 'function') {
@@ -143,7 +143,7 @@ function decodeJpeg(buf, cb) {
         var decoded;
 
         if (!result) {
-            var outBufferSize = outBufferWidth * outBufferHeight * 3;
+            var outBufferSize = outBufferWidth * outBufferHeight * 4;
             var rgbBuffer = new Uint8Array(Module.HEAPU8.buffer, outBufferPtr, outBufferSize);
             decoded = new ArrayBuffer(outBufferSize);
             new Uint8Array(decoded).set(rgbBuffer);
@@ -282,7 +282,7 @@ function decodeImage(buf, type, cb) {
         var decoded;
 
         if (!result) {
-            var outBufferSize = outBufferWidth * outBufferHeight * 3;
+            var outBufferSize = outBufferWidth * outBufferHeight * 4;
             var rgbBuffer = new Uint8Array(Module.HEAPU8.buffer, outBufferPtr, outBufferSize);
             decoded = new ArrayBuffer(outBufferSize);
             new Uint8Array(decoded).set(rgbBuffer);

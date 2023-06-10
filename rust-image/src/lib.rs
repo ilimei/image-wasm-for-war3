@@ -83,6 +83,8 @@ pub extern "C" fn rust_decode_image(image_data: ImageData, format: LibImageForma
     let data_vec: Vec<u8> = convert_void_ptr_to_u8_vector(image_data.data, image_data.len as usize);
     let img_fmt: ImageFormat = format.into();
     let img = image::load_from_memory_with_format(&data_vec, img_fmt).unwrap();
+    let img_width = img.width();
+    let img_height = img.height();
     let img = img.to_rgba8();
     // 将 Vec<u8> 转换为 Box<[u8]>
     let boxed_data = img.into_raw().into_boxed_slice();
@@ -91,8 +93,8 @@ pub extern "C" fn rust_decode_image(image_data: ImageData, format: LibImageForma
     let data_ptr: *mut c_void = Box::into_raw(boxed_data) as *mut c_void;
     // 创建 ImageBoxData 对象并返回它
     ImageBoxData {
-        width: image_data.width,
-        height: image_data.height,
+        width: img_width as c_int,
+        height: img_height as c_int,
         len: len as c_int,
         data: data_ptr,
     }

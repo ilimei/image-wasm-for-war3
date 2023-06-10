@@ -3,3 +3,4 @@ dist/
 test/*.png
 test/*.jpg
 test/*.tga
+package-lock.json

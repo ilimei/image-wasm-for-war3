@@ -197,7 +197,7 @@ extern int decode_image(unsigned char* image_buffer, unsigned int buffer_size, u
     buffer_size,
     image_buffer,
   };
-  ImageBoxData ret = rust_encode_image(data, type);
+  ImageBoxData ret = rust_decode_image(data, type);
   *out_buffer = (unsigned char *)ret.data;
   *out_width = ret.width;
   *out_height = ret.height;
