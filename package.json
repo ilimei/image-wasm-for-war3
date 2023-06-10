@@ -15,6 +15,15 @@
     "wasm",
     "image"
   ],
+  "files": [
+    "dist",
+    "!dist/api.o",
+    "src/api.js",
+    "index.js",
+    "index.d.ts",
+    "package.json",
+    "README.md"
+  ],
   "author": "ilimei",
   "license": "ISC",
   "bugs": {
