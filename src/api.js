@@ -290,7 +290,7 @@ function decodeImage(buf, type, cb) {
             err = new Error(Module.Pointer_stringify(outMsgPtr));
         }
 
-        Module._free(jpegBufferPtr);
+        Module._free(imageBufferPtr);
         Module._free(outBufferPtr);
         Module._free(outMsgPtr);
 
