@@ -252,8 +252,8 @@ export class Blp1Encoder {
             height: number,
             buffer: ArrayBuffer,
         }>((resolve, reject) => {
-            const newWidth = Math.floor(image.width / 2);
-            const newHeight = Math.floor(image.height / 2);
+            const newWidth = Math.max(1, Math.floor(image.width / 2));
+            const newHeight = Math.max(1, Math.floor(image.height / 2));
             resizeImage(image.buffer, {
                 width: image.width,
                 height: image.height,

@@ -29,7 +29,7 @@ async function build_rust_image() {
 async function build_target() {
     const CFLAGS = [
         '-std=c11', // C11 标准
-        // '-O2', // 优化等级 2
+        '-O2', // 优化等级 2
         '-fPIC', // 生成位置无关代码
     ];
     const ARG_EXPORTED_FUNCTIONS = JSON.stringify(EXPORTED_FUNCTIONS.map(f => `_${f}`));
