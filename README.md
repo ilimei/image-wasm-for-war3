@@ -31,7 +31,7 @@ encode(data.buffer, 100, 100, ImageType.Tga).then((tgaContent) => {
 
 ```js
 const fs = require("fs");
-const { ImageType, decode } = require("../index");
+const { ImageType, decode } = require("image-wasm-for-war3");
 
 const data = new Uint8Array(
   new Array(100 * 100 * 4).fill(0).map((_, i) => i % 255)
@@ -42,6 +42,26 @@ encode(fs.readFileSync('test.tga').buffer, ImageType.Tga).then((rgbaData) => {
     console.info(rgbaData.height);
     console.info(rgbaData.buffer);
 });
+```
+
+## blp1的处理
+
+```js
+const fs = require("fs");
+const { Blp1File, encode, decode, ImageType } = require("image-wasm-for-war3");
+
+const resizeImage = await decode(fs.readFileSync('some jpeg path'), ImageType.Jpeg);
+// 生成一个 mimap是一个 质量是80 的blp1文件
+const blpContent = await Blp1File.encode(resizeImage).encode(1, 80);
+// 保存文件
+fs.writeFileSync('some blp path', Buffer.from(blpContent));
+
+// 获取blp的第一张mimap数据
+const blpImageData = await Blp1File.decode(fs.readFileSync('some blp path').buffer).getMimapData(0);
+// 编码成png
+const pngContent = await encode(blpImageData.buffer, blpImageData.width, blpImageData.height, ImageType.Png);
+// 保存成png
+fs.writeFileSync('some png path', Buffer.from(pngContent));
 ```
 
 # 构建

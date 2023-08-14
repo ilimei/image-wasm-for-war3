@@ -43,7 +43,7 @@ void handle_exit(j_common_ptr cinfo) {
  * @param out_msg An error message, if any [must be freed by the caller via `free`].
  * @return 0 if there is no error, otherwise a error code, see 'jerror.h' for details.
  */
-extern int encode_jpeg(unsigned char* rgb_buffer, unsigned int rgb_width, unsigned int rgb_height, int quality, unsigned char **out_buffer, unsigned int *out_size, char **out_msg)
+extern int encode_jpeg(unsigned char* rgb_buffer, unsigned int rgb_width, unsigned int rgb_height, int components, int quality, unsigned char **out_buffer, unsigned int *out_size, char **out_msg)
 {
   unsigned char* out_buffer_ret = NULL;
   unsigned long out_size_ret = 0;
@@ -70,8 +70,12 @@ extern int encode_jpeg(unsigned char* rgb_buffer, unsigned int rgb_width, unsign
 
   cinfo.image_width = rgb_width;
   cinfo.image_height = rgb_height;
-  cinfo.input_components = 4;
-  cinfo.in_color_space = JCS_UNKNOWN;
+  cinfo.input_components = components;
+  if(components == 4) {
+    cinfo.in_color_space = JCS_UNKNOWN;
+  } else {
+    cinfo.in_color_space = JCS_RGB;
+  }
 
   jpeg_set_defaults(&cinfo);
 
@@ -82,7 +86,7 @@ extern int encode_jpeg(unsigned char* rgb_buffer, unsigned int rgb_width, unsign
   jpeg_start_compress(&cinfo, TRUE);
 
   JSAMPROW row_pointer[1];
-  int row_stride = rgb_width * 4;
+  int row_stride = rgb_width * components;
   while (cinfo.next_scanline < cinfo.image_height) {
     row_pointer[0] = &rgb_buffer[cinfo.next_scanline * row_stride];
     jpeg_write_scanlines(&cinfo, row_pointer, 1);
@@ -105,10 +109,11 @@ extern int encode_jpeg(unsigned char* rgb_buffer, unsigned int rgb_width, unsign
  * @param out_buffer Output RGB buffer  [must be freed by the called via `free`].
  * @param out_width Output buffer width.
  * @param out_height Output buffer height.
+ * @param out_components Output components size.
  * @param out_msg An error message, if any [must be freed by the caller via `free`].
  * @return 0 if there is no error, otherwise a error code, see 'jerror.h' for details.
  */
-extern int decode_jpeg(unsigned char* jpeg_buffer, unsigned int jpeg_size, unsigned char** out_buffer, unsigned int* out_width,  unsigned int* out_height, char** out_msg) {
+extern int decode_jpeg(unsigned char* jpeg_buffer, unsigned int jpeg_size, unsigned char** out_buffer, unsigned int* out_width,  unsigned int* out_height, unsigned int* out_components, char** out_msg) {
   struct jpeg_decompress_struct cinfo;
 
   struct basic_jpeg_error_mgr jerr;
@@ -136,6 +141,7 @@ extern int decode_jpeg(unsigned char* jpeg_buffer, unsigned int jpeg_size, unsig
   *out_buffer = (unsigned char*)malloc(row_stride * cinfo.output_height);
   *out_width = cinfo.output_width;
   *out_height = cinfo.output_height;
+  *out_components = cinfo.output_components;
   unsigned char* out_ptr = *out_buffer;
 
   while (cinfo.output_scanline < cinfo.output_height) {
@@ -163,13 +169,13 @@ extern int decode_jpeg(unsigned char* jpeg_buffer, unsigned int jpeg_size, unsig
  * @param out_msg An error message, if any [must be freed by the caller via `free`].
  * @return 0 if there is no error, otherwise a error code, see 'lodepng.h' for details.
  */
-extern int encode_image(unsigned char* rgb_buffer, unsigned int rgb_width, unsigned int rgb_height, unsigned int type, unsigned char **out_buffer, unsigned int *out_size, char **out_msg) 
+extern int encode_image(unsigned char* rgba_buffer, unsigned int rgb_width, unsigned int rgb_height, unsigned int type, unsigned char **out_buffer, unsigned int *out_size, char **out_msg) 
 {
   ImageData data = {
     rgb_width,
     rgb_height,
     rgb_width * rgb_height * 4,
-    rgb_buffer,
+    rgba_buffer,
   };
   ImageBoxData ret = rust_encode_image(data, type);
   *out_buffer = (unsigned char *)ret.data;
@@ -201,5 +207,17 @@ extern int decode_image(unsigned char* image_buffer, unsigned int buffer_size, u
   *out_buffer = (unsigned char *)ret.data;
   *out_width = ret.width;
   *out_height = ret.height;
+  return 0;
+}
+
+extern int resize_image(unsigned char* rgba_buffer, unsigned int rgb_width, unsigned int rgb_height, unsigned int out_width, unsigned int out_height, unsigned char **out_buffer, char **out_msg) {
+  ImageData data = {
+    rgb_width,
+    rgb_height,
+    rgb_width * rgb_height * 4,
+    rgba_buffer,
+  };
+  ImageBoxData ret = rust_resize_image(data, out_width, out_height);
+  *out_buffer = (unsigned char *)ret.data;
   return 0;
 }

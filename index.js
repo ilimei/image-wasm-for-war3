@@ -1,4 +1,5 @@
-const { encodeImage, decodeImage, ImageType, encodeJpeg, decodeJpeg } = require('./src/api');
+const { encodeImage, decodeImage, ImageType, encodeJpeg, decodeJpeg, resizeImage } = require('./src/api');
+const { Blp1File } = require('./src/blp');
 
 /**
  * 将rgba数据编码成指定图片类型的数据
@@ -15,6 +16,7 @@ function encode(buffer, width, height, type, quality = 100) {
             encodeJpeg(buffer, { width, height, quality }, (err, encoded) => {
                 if (err) {
                     reject(err);
+                    return;
                 }
                 resolve(encoded);
             });
@@ -22,6 +24,7 @@ function encode(buffer, width, height, type, quality = 100) {
             encodeImage(buffer, { width, height, type }, (err, encoded) => {
                 if (err) {
                     reject(err);
+                    return;
                 }
                 resolve(encoded);
             });
@@ -41,6 +44,7 @@ function decode(buffer, type) {
             decodeJpeg(buffer, (err, decoded) => {
                 if (err) {
                     reject(err);
+                    return;
                 }
                 resolve(decoded);
             });
@@ -48,6 +52,7 @@ function decode(buffer, type) {
             decodeImage(buffer, type, (err, decoded) => {
                 if (err) {
                     reject(err);
+                    return;
                 }
                 resolve(decoded);
             });
@@ -55,8 +60,31 @@ function decode(buffer, type) {
     });
 }
 
+/**
+ * 缩放rgba图像
+ * @param buffer buffer rgba图片数据
+ * @param width 图像宽度
+ * @param height 图像高度
+ * @param outWidth 新图片宽度
+ * @param outHeight 新图片高度
+ * @returns {Promise<ArrayBuffer>} 缩放后的rgba图像数据
+ */
+function resize(buffer, width, height, outWidth, outHeight) {
+    return new Promise((resolve, reject) => {
+        resizeImage(buffer, { width, height, outWidth, outHeight }, (err, encoded) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(encoded);
+        });
+    });
+}
+
 module.exports = {
     encode,
     decode,
+    resize,
+    Blp1File,
     ImageType
 }

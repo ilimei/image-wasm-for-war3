@@ -7,6 +7,7 @@ import path from 'path';
 const EXPORTED_FUNCTIONS = [
     'encode_jpeg',
     'decode_jpeg',
+    'resize_image',
     'encode_image',
     'decode_image',
     'free',
@@ -16,9 +17,8 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 
 async function build_jpeg() {
     const JPEG_DIR= path.resolve(ROOT_DIR, 'libjpeg-turbo');
-    await $`cd ${JPEG_DIR}`;
-    await $`emcmake cmake -DWITH_JPEG8=1`
-    await $`emmake make -j8 jpeg12-static/fast jpeg16-static/fast jpeg-static/fast`
+    await $`cd ${JPEG_DIR} && emcmake cmake -DWITH_JPEG8=1`
+    await $`cd ${JPEG_DIR} && emmake make -j8 jpeg12-static/fast jpeg16-static/fast jpeg-static/fast`
 }
 
 async function build_rust_image() {
@@ -29,7 +29,7 @@ async function build_rust_image() {
 async function build_target() {
     const CFLAGS = [
         '-std=c11', // C11 标准
-        '-O2', // 优化等级 2
+        // '-O2', // 优化等级 2
         '-fPIC', // 生成位置无关代码
     ];
     const ARG_EXPORTED_FUNCTIONS = JSON.stringify(EXPORTED_FUNCTIONS.map(f => `_${f}`));

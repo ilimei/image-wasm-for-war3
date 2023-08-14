@@ -18,13 +18,15 @@ var doneF = new Promise(function (resolve, reject) {
 module.exports.encode = encodeJpeg;
 
 /* see 'api.h' for declarations */
-var encode_jpeg = Module.cwrap('encode_jpeg', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']);
-// int decode_jpeg(unsigned char* jpeg_buffer, unsigned int jpeg_size, unsigned char** out_buffer, unsigned int* out_width,  unsigned int* out_height, char** out_msg);
-var decode_jpeg = Module.cwrap('decode_jpeg', 'number', ['number', 'number', 'number', 'number', 'number', 'number']);
+var encode_jpeg = Module.cwrap('encode_jpeg', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']);
+// int decode_jpeg(unsigned char* jpeg_buffer, unsigned int jpeg_size, unsigned char** out_buffer, unsigned int* out_width,  unsigned int* out_height,  unsigned int* out_components, char** out_msg);
+var decode_jpeg = Module.cwrap('decode_jpeg', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']);
 // int encode_image(unsigned char* rgb_buffer, unsigned int rgb_width, unsigned int rgb_height, unsigned int type, unsigned char **out_buffer, unsigned int *out_size, char **out_msg);
 var encode_image = Module.cwrap('encode_image', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']);
 // int decode_image(unsigned char* image_buffer, unsigned int buffer_size, unsigned int type, unsigned char** out_buffer, unsigned int* out_width,  unsigned int* out_height, char** out_msg);
 var decode_image = Module.cwrap('decode_image', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']);
+// int resize_image(unsigned char* rgba_buffer, unsigned int rgb_width, unsigned int rgb_height, unsigned int out_width, unsigned int out_height, unsigned char **out_buffer, char **out_msg);
+var resize_image = Module.cwrap('resize_image', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']);
 
 var SIZE_OF_POINTER = 4;
 
@@ -37,6 +39,7 @@ var DEFAULT_QUALITY = 90;
  * @param {object} options Params { width: number, height: number, quality: number }
  *                  Width of RGBA image, pixels.
  *                  Height of RGBA image, pixels.
+ *                  hasAlpha 1 or 0
  *                  Quality, [0 - 100].
  * @param {function} cb Callback to invoke on compvarion.
  *
@@ -55,6 +58,10 @@ function encodeJpeg(buf, options, cb) {
     var width = options.width;
     var height = options.height;
     var quality = options.quality || DEFAULT_QUALITY;
+    var components = 4;
+    if (options.hasAlpha === false) {
+        components = 3;
+    }
 
     doneF.then(function () {
         var stack = Runtime.stackSave();
@@ -71,7 +78,7 @@ function encodeJpeg(buf, options, cb) {
         Module.setValue(outMsgPtrPtr, 0, 'i32');
 
         // invoke
-        var result = encode_jpeg(rgbBufferPtr, width, height, quality, outBufferPtrPtr, outBufferSizePtr, outMsgPtrPtr);
+        var result = encode_jpeg(rgbBufferPtr, width, height, components, quality, outBufferPtrPtr, outBufferSizePtr, outMsgPtrPtr);
 
         var outBufferPtr = Module.getValue(outBufferPtrPtr, 'i32');
         var outBufferSize = Module.getValue(outBufferSizePtr, 'i32');
@@ -88,8 +95,6 @@ function encodeJpeg(buf, options, cb) {
             var jpegBuffer = new Uint8Array(Module.HEAPU8.buffer, outMsgPtr, 1000);
             // q: jpegBuffer转成string
             var jpegString = String.fromCharCode.apply(null, jpegBuffer);
-            console.log(jpegString);
-            console.info(jpegBuffer);
             err = new Error(Module.Pointer_stringify(outMsgPtr));
         }
 
@@ -125,28 +130,42 @@ function decodeJpeg(buf, cb) {
         var outBufferPtrPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
         var outBufferWidthPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
         var outBufferHeightPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
+        var outComponentsPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
         var outMsgPtrPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
 
         Module.setValue(outBufferPtrPtr, 0, 'i32');
         Module.setValue(outBufferWidthPtr, 0, 'i32');
         Module.setValue(outBufferHeightPtr, 0, 'i32');
+        Module.setValue(outComponentsPtr, 0, 'i32');
         Module.setValue(outMsgPtrPtr, 0, 'i32');
 
-        var result = decode_jpeg(jpegBufferPtr, buf.byteLength, outBufferPtrPtr, outBufferWidthPtr, outBufferHeightPtr, outMsgPtrPtr);
+        var result = decode_jpeg(jpegBufferPtr, buf.byteLength, outBufferPtrPtr, outBufferWidthPtr, outBufferHeightPtr, outComponentsPtr, outMsgPtrPtr);
 
         var outBufferPtr = Module.getValue(outBufferPtrPtr, 'i32');
         var outBufferWidth = Module.getValue(outBufferWidthPtr, 'i32');
         var outBufferHeight = Module.getValue(outBufferHeightPtr, 'i32');
+        var outComponents = Module.getValue(outComponentsPtr, 'i32');
         var outMsgPtr = Module.getValue(outMsgPtrPtr, 'i32');
 
         var err;
         var decoded;
 
         if (!result) {
-            var outBufferSize = outBufferWidth * outBufferHeight * 4;
+            var outBufferSize = outBufferWidth * outBufferHeight * outComponents;
             var rgbBuffer = new Uint8Array(Module.HEAPU8.buffer, outBufferPtr, outBufferSize);
-            decoded = new ArrayBuffer(outBufferSize);
-            new Uint8Array(decoded).set(rgbBuffer);
+            if (outComponents === 3) {
+                decoded = new ArrayBuffer(outBufferWidth * outBufferHeight * 4);
+                var decodedView = new Uint8Array(decoded);
+                for (var i = 0; i < outBufferWidth * outBufferHeight; i++) {
+                    decodedView[i * 4] = rgbBuffer[i * 3];
+                    decodedView[i * 4 + 1] = rgbBuffer[i * 3 + 1];
+                    decodedView[i * 4 + 2] = rgbBuffer[i * 3 + 2];
+                    decodedView[i * 4 + 3] = 255;
+                }
+            } else {
+                decoded = new ArrayBuffer(outBufferSize);
+                new Uint8Array(decoded).set(rgbBuffer);
+            }
         } else {
             err = new Error(Module.Pointer_stringify(outMsgPtr));
         }
@@ -224,11 +243,6 @@ function encodeImage(buf, options, cb) {
             encoded = new ArrayBuffer(outBufferSize);
             new Uint8Array(encoded).set(jpegBuffer);
         } else {
-            var jpegBuffer = new Uint8Array(Module.HEAPU8.buffer, outMsgPtr, 1000);
-            // q: jpegBuffer转成string
-            var jpegString = String.fromCharCode.apply(null, jpegBuffer);
-            console.log(jpegString);
-            console.info(jpegBuffer);
             err = new Error(Module.Pointer_stringify(outMsgPtr));
         }
 
@@ -309,6 +323,65 @@ function decodeImage(buf, type, cb) {
         .catch(cb)
 }
 
+function resizeImage(buf, options, cb) {
+    if (typeof options === 'function') {
+        cb = options;
+        options = {};
+    }
+
+    if (!options.hasOwnProperty('width') || !options.hasOwnProperty('height')) {
+        return cb(new Error('Width & height of the buffer is not provided.'));
+    }
+
+    var width = options.width;
+    var height = options.height;
+    var outWidth = options.outWidth;
+    var outHeight = options.outHeight;
+
+    doneF.then(function () {
+        var stack = Runtime.stackSave();
+
+        var rgbBufferPtr = Module._malloc(buf.byteLength);
+        Module.HEAPU8.set(new Uint8Array(buf), rgbBufferPtr);
+
+        var outBufferPtrPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
+        var outMsgPtrPtr = Runtime.stackAlloc(SIZE_OF_POINTER);
+
+        Module.setValue(outBufferPtrPtr, 0, 'i32');
+        Module.setValue(outMsgPtrPtr, 0, 'i32');
+
+        // invoke
+        var result = resize_image(rgbBufferPtr, width, height, outWidth, outHeight, outBufferPtrPtr, outMsgPtrPtr);
+
+        var outBufferPtr = Module.getValue(outBufferPtrPtr, 'i32');
+        var outMsgPtr = Module.getValue(outMsgPtrPtr, 'i32');
+
+        var err;
+        var encoded;
+
+        if (!result) {
+            var jpegBuffer = new Uint8Array(Module.HEAPU8.buffer, outBufferPtr, outWidth * outHeight * 4);
+            encoded = new ArrayBuffer(jpegBuffer.length);
+            new Uint8Array(encoded).set(jpegBuffer);
+        } else {
+            err = new Error(Module.Pointer_stringify(outMsgPtr));
+        }
+
+        Module._free(rgbBufferPtr);
+        Module._free(outBufferPtr);
+        Module._free(outMsgPtr);
+
+        Runtime.stackRestore(stack);
+
+        if (err) {
+            return cb(err);
+        } else {
+            return cb(null, encoded);
+        }
+    })
+        .catch(cb)
+}
+
 const ImageType = {
     Tga: 0,
     Png: 1,
@@ -319,6 +392,7 @@ module.exports = {
     ImageType,
     encodeJpeg,
     decodeJpeg,
+    resizeImage,
     encodeImage,
     decodeImage,
 };

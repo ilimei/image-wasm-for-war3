@@ -24,3 +24,4 @@ typedef enum {
 
 ImageBoxData rust_encode_image(ImageData image_data, LibImageFormat format);
 ImageBoxData rust_decode_image(ImageData image_data, LibImageFormat format);
+ImageBoxData rust_resize_image(ImageData image_data, int width, int height);

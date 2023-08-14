@@ -4,3 +4,9 @@ test/*.png
 test/*.jpg
 test/*.tga
 package-lock.json
+src/blp.js
+src/blp.d.ts
+src/blp.js.map
+scr/struct.js
+scr/struct.d.ts
+scr/struct.js.map
