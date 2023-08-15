@@ -46,6 +46,10 @@ async function build_target() {
     const CWASMFALGS = [
         '-s', // 附加选项
         'ALLOW_MEMORY_GROWTH=1', // 允许内存增长
+        '-s',
+        'NODEJS_CATCH_EXIT=0', // 禁用全局错误捕获
+        '-s',
+        'NODEJS_CATCH_REJECTION=0',  // 禁用全局错误捕获
         '-s', 
         'WASM=1',
         '-s',

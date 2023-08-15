@@ -1,6 +1,6 @@
 {
   "name": "image-wasm-for-war3",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "image process by wasm",
   "main": "index.js",
   "scripts": {
