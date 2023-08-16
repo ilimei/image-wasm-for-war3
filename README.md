@@ -16,14 +16,23 @@ npm install image-wasm-for-war3
 
 ```js
 const fs = require("fs");
-const { ImageType, encode } = require("../index");
+const { ImageType, encode } = require("image-wasm-for-war3");
 
 const data = new Uint8Array(
   new Array(100 * 100 * 4).fill(0).map((_, i) => i % 255)
 );
+const image = {
+    width: 100,
+    height: 100,
+    buffer: data.buffer,
+}
 
-encode(data.buffer, 100, 100, ImageType.Tga).then((tgaContent) => {
+encode(image, ImageType.Tga).then((tgaContent) => {
   fs.writeFileSync("test.tga", Buffer.from(tgaContent));
+});
+
+encode(image, ImageType.Blp1).then((blp1Content) => {
+  fs.writeFileSync("test.blp", Buffer.from(blp1Content));
 });
 ```
 
@@ -33,15 +42,30 @@ encode(data.buffer, 100, 100, ImageType.Tga).then((tgaContent) => {
 const fs = require("fs");
 const { ImageType, decode } = require("image-wasm-for-war3");
 
-const data = new Uint8Array(
-  new Array(100 * 100 * 4).fill(0).map((_, i) => i % 255)
-);
-
-encode(fs.readFileSync('test.tga').buffer, ImageType.Tga).then((rgbaData) => {
+decode(fs.readFileSync('test.tga'), ImageType.Tga).then((rgbaData) => {
     console.info(rgbaData.width);
     console.info(rgbaData.height);
     console.info(rgbaData.buffer);
 });
+
+decode(fs.readFileSync('test.blp'), ImageType.Blp1).then((rgbaData) => {
+    console.info(rgbaData.width);
+    console.info(rgbaData.height);
+    console.info(rgbaData.buffer);
+});
+```
+
+## resize
+```js
+const fs = require("fs");
+const { ImageType, encode, decode, resize } = require("image-wasm-for-war3");
+
+decode(fs.readFileSync('big.tga'), ImageType.Tga)
+  .then((rgbaData) => resize(rgbaData, 50, 50))
+  .then(resizeImage => encode(resizeImage, ImageType.Tga))
+  .then((tgaContent) => {
+    fs.writeFileSync("small.tga", Buffer.from(tgaContent));
+  });
 ```
 
 ## blp1的处理
@@ -52,14 +76,14 @@ const { Blp1File, encode, decode, ImageType } = require("image-wasm-for-war3");
 
 const resizeImage = await decode(fs.readFileSync('some jpeg path'), ImageType.Jpeg);
 // 生成一个 mimap是一个 质量是80 的blp1文件
-const blpContent = await Blp1File.encode(resizeImage).encode(1, 80);
+const blpContent = await Blp1File.encode(resizeImage).encode(80, 1);
 // 保存文件
 fs.writeFileSync('some blp path', Buffer.from(blpContent));
 
 // 获取blp的第一张mimap数据
-const blpImageData = await Blp1File.decode(fs.readFileSync('some blp path').buffer).getMimapData(0);
+const blpImageData = await Blp1File.decode(fs.readFileSync('some blp path')).getMimapData(0);
 // 编码成png
-const pngContent = await encode(blpImageData.buffer, blpImageData.width, blpImageData.height, ImageType.Png);
+const pngContent = await encode(blpImageData, ImageType.Png);
 // 保存成png
 fs.writeFileSync('some png path', Buffer.from(pngContent));
 ```

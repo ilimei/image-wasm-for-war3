@@ -3,10 +3,14 @@ dist/
 test/*.png
 test/*.jpg
 test/*.tga
+test/*.blp
 package-lock.json
 src/blp.js
 src/blp.d.ts
 src/blp.js.map
+src/index.js
+src/index.d.ts
+src/index.js.map
 scr/struct.js
 scr/struct.d.ts
 scr/struct.js.map

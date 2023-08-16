@@ -1,8 +1,8 @@
 {
   "name": "image-wasm-for-war3",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "image process by wasm",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "tsc": "tsc",
     "build": "zx scripts/build.mjs && npm run tsc",
@@ -21,12 +21,12 @@
     "!dist/api.o",
     "src/api.js",
     "src/api.d.ts",
+    "src/index.js",
+    "src/index.d.ts",
     "src/blp.js",
     "src/blp.d.ts",
     "src/struct.js",
     "src/struct.d.ts",
-    "index.js",
-    "index.d.ts",
     "package.json",
     "README.md"
   ],

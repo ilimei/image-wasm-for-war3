@@ -386,6 +386,7 @@ const ImageType = {
     Tga: 0,
     Png: 1,
     Jpeg: 2,
+    Blp1: 3,
 }
 
 module.exports = {

@@ -43,7 +43,7 @@ function swapRedBlue(image: {
 export class Blp1Reader {
     blpHeader = new BlpHeader();
     view: DataView;
-    buffer: ArrayBufferLike;
+    buffer: ArrayBuffer;
 
     headerValue: {
         magic: string;
@@ -62,9 +62,9 @@ export class Blp1Reader {
         header: Uint8Array;
     };
 
-    constructor(buffer: ArrayBufferLike) {
-        this.buffer = buffer;
-        const view = new DataView(buffer);
+    constructor(buffer: ArrayBuffer | Buffer) {
+        this.buffer = new Uint8Array(buffer);
+        const view = new DataView(this.buffer);
         const header = this.blpHeader.read(view, 0);
         this.view = view;
         this.headerValue = header;
@@ -273,7 +273,7 @@ export class Blp1Encoder {
         });
     }
 
-    async encode(mipsCount: number = this.mipMapsCount - 1, quality: number = 90) {
+    async encode(quality: number = 90, mipsCount: number = this.mipMapsCount - 1) {
         if (mipsCount > this.mipMapsCount) {
             throw new Error('mipsCount is too large');
         } else if (mipsCount < 1) {
@@ -322,7 +322,7 @@ export class Blp1File {
         mipmapSizes: new Array(16).fill(0),
     };
 
-    static decode(buffer: ArrayBufferLike) {
+    static decode(buffer: ArrayBuffer | Buffer) {
         return new Blp1Reader(buffer);
     }
 
