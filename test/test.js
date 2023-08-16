@@ -31,14 +31,18 @@ async function main() {
     const resizeBlpContent = await encode(resizeImage, ImageType.Blp1, { quality: 80 });
     fs.writeFileSync(__dirname + '/resize.blp', Buffer.from(resizeBlpContent));
 
-    const tagImage = await decode(tgaContent, ImageType.Tga);
+    const tagImage = await decode(fs.readFileSync(__dirname + '/test.tga'), ImageType.Tga);
     assert(tagImage.width === 100 && tagImage.height === 100 && tagImage.buffer.byteLength === 100 * 100 * 4, 'tga decode error');
-    const pngImage = await decode(pngContent, ImageType.Png);
+    const pngImage = await decode(fs.readFileSync(__dirname + '/test.png'), ImageType.Png);
     assert(pngImage.width === 100 && pngImage.height === 100 && pngImage.buffer.byteLength === 100 * 100 * 4, 'png decode error');
-    const jpegImage = await decode(jpegContent, ImageType.Jpeg);
+    const jpegImage = await decode(fs.readFileSync(__dirname + '/test.jpg'), ImageType.Jpeg);
     assert(jpegImage.width === 100 && jpegImage.height === 100 && jpegImage.buffer.byteLength === 100 * 100 * 4, 'jpeg decode error');
-    const blpImage = await decode(blp1Content, ImageType.Blp1);
+    const blpImage = await decode(fs.readFileSync(__dirname + '/test.blp'), ImageType.Blp1);
     assert(blpImage.width === 100 && blpImage.height === 100 && blpImage.buffer.byteLength === 100 * 100 * 4, 'blp1 decode error');
+    const blp1Image = await decode(fs.readFileSync(__dirname + '/HeroLevel-Border.blp'), ImageType.Blp1);
+    assert(blp1Image.width === 64 && blp1Image.height === 64, 'blp1 decode error');
+    const blp1AlphaImage = await decode(fs.readFileSync(__dirname + '/HumanUI-ReplayCover.blp'), ImageType.Blp1);
+    assert(blp1AlphaImage.width === 512 && blp1AlphaImage.height === 512, 'blp1 decode error');
 }
 
 main();

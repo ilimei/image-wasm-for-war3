@@ -43,7 +43,7 @@ function swapRedBlue(image: {
 export class Blp1Reader {
     blpHeader = new BlpHeader();
     view: DataView;
-    buffer: ArrayBuffer;
+    buffer: Uint8Array;
 
     headerValue: {
         magic: string;
@@ -64,7 +64,7 @@ export class Blp1Reader {
 
     constructor(buffer: ArrayBuffer | Buffer) {
         this.buffer = new Uint8Array(buffer);
-        const view = new DataView(this.buffer);
+        const view = new DataView(this.buffer.buffer);
         const header = this.blpHeader.read(view, 0);
         this.view = view;
         this.headerValue = header;
@@ -72,7 +72,7 @@ export class Blp1Reader {
         // jpeg
         if (header.compression === 0) {
             const jpegHeaderSize = view.getUint32(this.blpHeader.size, true);
-            const jpegHeader = new Uint8Array(buffer, this.blpHeader.size + 4, jpegHeaderSize);
+            const jpegHeader = this.buffer.slice(this.blpHeader.size + 4, this.blpHeader.size + 4 + jpegHeaderSize);
             this.jpegHeader = {
                 size: jpegHeaderSize,
                 header: jpegHeader,
@@ -92,7 +92,7 @@ export class Blp1Reader {
         return this.headerValue.hasMipmaps;
     }
 
-    getMimapData(index: number = 0): Promise<{
+    async getMimapData(index: number = 0): Promise<{
         width: number;
         height: number;
         buffer: ArrayBuffer;
@@ -122,11 +122,12 @@ export class Blp1Reader {
         }
 
         // bgra
-        const palette = new Uint8Array(this.buffer, this.blpHeader.size, 256 * 4); // 调色板
+        const palette = this.buffer.slice(this.blpHeader.size, this.blpHeader.size + 256 * 4); // 调色板
         const size = width * height;
-        const sourcePixels = new Uint8Array(buffer, 0, size); // 原始像素
+        const sourcePixels = buffer.slice(0, size); // 原始像素
         const out = new Uint8Array(size * 4);
-        const alpha = new Uint8Array(buffer, size); // alpha通道
+        const alpha = buffer.slice(size); // alpha通道
+
         switch (this.headerValue.alphaBits) {
             case 0:
                 // 无alpha通道

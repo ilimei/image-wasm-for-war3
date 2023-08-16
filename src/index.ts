@@ -37,7 +37,11 @@ export interface EncodeOption {
  */
 export function encode(image: ImageRgba, type: valueOf<typeof ImageType>, opt?: EncodeOption): Promise<ArrayBuffer> {
     if (type === ImageType.Blp1) {
-        return Blp1File.encode(image).encode(opt?.quality, opt?.mimapCount);
+        try {
+            return Blp1File.encode(image).encode(opt?.quality, opt?.mimapCount);
+        } catch (e) {
+            return Promise.reject(e);
+        }
     }
 
     return new Promise<ArrayBuffer>((resolve, reject) => {
@@ -68,29 +72,33 @@ export function encode(image: ImageRgba, type: valueOf<typeof ImageType>, opt?: 
  * @returns {Promise<ImageRgba>} rgba数据
  */
 export function decode(buffer: ArrayBuffer | Buffer, type: valueOf<typeof ImageType>): Promise<ImageRgba> {
-    const buf = buffer instanceof ArrayBuffer ? buffer : Uint8Array.from(buffer);
-    if (type === ImageType.Blp1) {
-        return Blp1File.decode(buf).getMimapData(0);
-    }
-    return new Promise((resolve, reject) => {
-        if (type === ImageType.Jpeg) {
-            decodeJpeg(buf, (err, decoded) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(decoded);
-            });
-        } else {
-            decodeImage(buf, type, (err, decoded) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(decoded);
-            });
+    try {
+        const buf = buffer instanceof ArrayBuffer ? buffer : Uint8Array.from(buffer);
+        if (type === ImageType.Blp1) {
+            return Blp1File.decode(buf).getMimapData(0);
         }
-    });
+        return new Promise((resolve, reject) => {
+            if (type === ImageType.Jpeg) {
+                decodeJpeg(buf, (err, decoded) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(decoded);
+                });
+            } else {
+                decodeImage(buf, type, (err, decoded) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(decoded);
+                });
+            }
+        });
+    } catch (e) {
+        return Promise.reject(e);
+    }
 }
 
 /**

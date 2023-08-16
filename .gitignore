@@ -4,6 +4,8 @@ test/*.png
 test/*.jpg
 test/*.tga
 test/*.blp
+!test/HumanUI-ReplayCover.blp
+!test/HeroLevel-Border.blp
 package-lock.json
 src/blp.js
 src/blp.d.ts
