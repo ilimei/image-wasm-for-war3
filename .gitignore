@@ -11,8 +11,8 @@ src/blp.js.map
 src/index.js
 src/index.d.ts
 src/index.js.map
-scr/struct.js
-scr/struct.d.ts
-scr/struct.js.map
+src/struct.js
+src/struct.d.ts
+src/struct.js.map
 libjpeg-turbo/
 
