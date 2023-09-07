@@ -274,7 +274,7 @@ export class Blp1Encoder {
         });
     }
 
-    async encode(quality: number = 90, mipsCount: number = this.mipMapsCount - 1) {
+    async encode(quality: number = 90, mipsCount: number = this.mipMapsCount) {
         if (mipsCount > this.mipMapsCount) {
             throw new Error('mipsCount is too large');
         } else if (mipsCount < 1) {
@@ -303,7 +303,7 @@ export class Blp1Encoder {
         // 循环写入
         for (let i = 0; i < mipsCount; i++) {
             const jpegBuffer = jpegBuffers[i];
-            uint8View.set(new Uint8Array(jpegBuffer, 4), this.headerValue.mipmapOffsets[i]);
+            uint8View.set(new Uint8Array(jpegBuffer.slice(4)), this.headerValue.mipmapOffsets[i]);
         }
         return outBuffer;
     }
